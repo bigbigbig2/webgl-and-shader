@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制单个点</title>
+    <script src="./glMatrix-0.9.6.min.js"></script>
+    <script>
+        var vertexString =`
+            attribute vec4 a_position;
+            uniform mat4 proj; 
+            void main(){
+                gl_Position = proj * a_position;
+                gl_PointSize = 60.0;
+            }
+        `;
+        var fragmentString =`
+            void main(){
+                gl_FragColor =vec4(0,0,1.0,1.0);
+            }
+        `;
+        var webgl;
+        var projMat4 = mat4.create();
+        //入口函数
+        function init(){
+            initWebgl();
+            initShader();
+            initBuffer();
+            draw();
+        }
+        //webgl初始化函数
+        function initWebgl(){
+            let webglDiv = document.getElementById("webglCanvas");
+            webgl = webglDiv.getContext("webgl"); //获取webgl上下文
+            webgl.viewport(0,0,webglDiv.clientWidth,webglDiv.clientHeight); //设置webgl视口（0，0为左上角原点）
+            //设置webgl的投影坐标系（总共有7个参数）
+            mat4.ortho(0,webglDiv.clientWidth,webglDiv.clientHeight,0,1,-1,projMat4)
+
+
+        }
+        //shader初始化函数
+        function initShader(){
+            //创建shader容器
+            let vsshader = webgl.createShader(webgl.VERTEX_SHADER);
+            let fsshader = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+            //容器与上面写的sharder代码片断绑定，第一个参数为容器，第二个参数为对应的sharder文本
+            webgl.shaderSource(vsshader,vertexString)
+            webgl.shaderSource(fsshader,fragmentString)
+            //将绑定后的着色器编译,直接传入容器即可
+            webgl.compileShader(vsshader);
+            webgl.compileShader(fsshader);
+            if (!webgl.getShaderParameter(vsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(vsshader);
+                alert(err);
+                return;
+            }
+            if (!webgl.getShaderParameter(fsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(fsshader);
+                alert(err);
+                return;
+            }
+            //创建webgl程序，并将并将这两个 shader 关联到这个 WebGL 程序上
+            let program = webgl.createProgram();
+            webgl.attachShader(program,vsshader);
+            webgl.attachShader(program,fsshader);
+            //WebGLProgram 对象的创建过程主要是添加 vertexShader 和 fragmentShader，然后将这个 WebGLProgram 对象链接到 WebGL 上下文对象上。
+            webgl.linkProgram(program);
+            //最后，通过useProgram选择启用这个WebGLProgram对象。这样，当我们绘制图形时，GPU就会执行我们通过WebGLProgram设定的两个shader程序了。
+            webgl.useProgram(program);
+
+            webgl.program = program;
+
+        }
+        //数据缓冲区初始化函数(定义数据，并将数据推到sharder上)
+        function initBuffer(){
+            let pointPosition = new Float32Array([100.0,100.0,0.0,1.0]);
+            //获取shader里的变量
+            let aPosition = webgl.getAttribLocation(webgl.program, "a_position");
+            webgl.vertexAttrib4fv(aPosition,pointPosition)
+
+            let uniformProj = webgl.getUniformLocation(webgl.program,"proj");
+            webgl.uniformMatrix4fv(uniformProj, false, projMat4);
+        
+        }
+        //webgl的绘制函数
+        function draw(){
+            webgl.clearColor(0.0,0.0,0.0,1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT);
+            //三个参数(绘制的图形，从数组的那个开始，要绘制几个点)
+            webgl.drawArrays(webgl.POINTS,0,1)
+
+        }
+    </script>
+</head>
+<body onload="init()">
+    <canvas id = "webglCanvas" width="500px" height="500px"></canvas>
+</body>
+</html>
