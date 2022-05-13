@@ -7,6 +7,7 @@
     <title>绘制单个点</title>
     <script src="./glMatrix-0.9.6.min.js"></script>
     <script>
+        //顶点着色器程序
         var vertexString =`
             attribute vec4 a_position;
             uniform mat4 proj; 
@@ -15,6 +16,7 @@
                 gl_PointSize = 60.0;
             }
         `;
+        //片元着色器程序
         var fragmentString =`
             void main(){
                 gl_FragColor =vec4(0,0,1.0,1.0);
@@ -31,7 +33,9 @@
         }
         //webgl初始化函数
         function initWebgl(){
+            // 荻取<cavas> 元素
             let webglDiv = document.getElementById("webglCanvas");
+            //获取webgl绘图上下文
             webgl = webglDiv.getContext("webgl"); //获取webgl上下文
             webgl.viewport(0,0,webglDiv.clientWidth,webglDiv.clientHeight); //设置webgl视口（0，0为左上角原点）
             //设置webgl的投影坐标系（总共有7个参数）
