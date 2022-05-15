@@ -81,6 +81,8 @@
         function initBuffer(){
             let pointPosition = new Float32Array([100.0,100.0,0.0,1.0]);
             //获取shader里的变量
+            //这里没有将数据存到缓冲区
+            //将数据推到webgl.program中
             let aPosition = webgl.getAttribLocation(webgl.program, "a_position");
             webgl.vertexAttrib4fv(aPosition,pointPosition)
 

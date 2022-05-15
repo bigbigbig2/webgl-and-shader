@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGL Hello world</title>
+</head>
+<body>
+  <canvas width="300" height="300"></canvas>
+  <script>
+    //创建WebGL上下文
+    const canvas = document.querySelector('canvas');
+    const gl = canvas.getContext('webgl'); 
+    
+    //编写两个着色器
+    const vertex = `
+      attribute vec2 position; //gl_Position保存返回变换后的顶点（每次渲染一个形状时，顶点着色器会在形状中的每个顶点运行）
+      varying vec3 color; //通过定义 varying 变量，向片元着色器传递数据
+      void main() {
+        gl_PointSize = 1.0;
+        color = vec3(0.5 + position * 0.5, 0.0);
+        gl_Position = vec4(position * 0.5, 1.0, 1.0);
+      }
+    `;
+
+    const fragment = `
+      precision mediump float;
+      varying vec3 color;
+      void main()
+      {
+        gl_FragColor = vec4(color, 1.0); //定义像素点的颜色
+      }    
+    `;
+	
+    ///因为在 JavaScript 中，顶点着色器和片元着色器只是一段代码片段，所以我们要将它们分别创建成shader对象
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertex);
+    gl.compileShader(vertexShader);
+
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragment);
+    gl.compileShader(fragmentShader);
+
+	//创建webgl程序
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    //将数据读取到缓存区
+    const points = new Float32Array([
+      -1, -1,
+      0, 1,
+      1, -1,
+    ]);
+    //这个过程简单总结为三步，分别是创建一个缓存对象，将它绑定为当前操作对象，再把当前的数据写入缓存对象。这三个步骤主要是利用 createBuffer、bindBuffer、bufferData 方法来实现
+    const bufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
+
+    //将 buffer 的数据绑定给顶点着色器的 position 变量。
+    const vPosition = gl.getAttribLocation(program, 'position');
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    //执行着色器程序完成绘制
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, points.length / 2);
+  </script>
+</body>
+</html>
