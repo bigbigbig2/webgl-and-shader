@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>动态绘制多点</title>
+    <script src="./glMatrix-0.9.6.min.js"></script>
+    <script>
+        let vertexShader = `
+            attribute vec3 a_position;
+            uniform mat4 proj;
+        `
+    </script>
 </head>
 <body>
     
