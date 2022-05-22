@@ -53,6 +53,8 @@
       -1, -1,
       0, 1,
       1, -1,
+      1, 1,
+      -1, 1
     ]);
     //这个过程简单总结为三步，分别是创建一个缓存对象，将它绑定为当前操作对象，再把当前的数据写入缓存对象。这三个步骤主要是利用 createBuffer、bindBuffer、bufferData 方法来实现
     const bufferId = gl.createBuffer();
@@ -66,7 +68,8 @@
 
     //执行着色器程序完成绘制
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, points.length / 2);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, points.length / 2);//实心
+
   </script>
 </body>
 </html>
