@@ -4,16 +4,110 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>动态绘制多点</title>
-    <script src="./glMatrix-0.9.6.min.js"></script>
+    <title>绘制单个点</title>
     <script>
-        let vertexShader = `
-            attribute vec3 a_position;
-            uniform mat4 proj;
-        `
+        //顶点着色器程序
+        var vertexString =`
+            attribute vec2 a_position;
+            void main(){
+                gl_Position = vec4(a_position, 1.0, 1.0);
+                gl_PointSize = 40.0;
+            }
+        `;
+        //片元着色器程序
+        var fragmentString =`
+            void main(){
+                gl_FragColor =vec4(1.0, 0.0, 0.0, 1.0);
+            }
+        `;
+        var webgl;
+        //入口函数
+        function init(){
+            initWebgl();
+            initShader();
+            initBuffer();
+            draw();
+        }
+        //webgl初始化函数
+        function initWebgl(){
+            // 荻取<cavas> 元素
+            let webglDiv = document.getElementById("webglCanvas");
+            //获取webgl绘图上下文
+            webgl = webglDiv.getContext("webgl"); //获取webgl上下文
+        }
+        //shader初始化函数
+        function initShader(){
+            //创建shader容器
+            let vsshader = webgl.createShader(webgl.VERTEX_SHADER);
+            let fsshader = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+            //容器与上面写的sharder代码片断绑定，第一个参数为容器，第二个参数为对应的sharder文本
+            webgl.shaderSource(vsshader,vertexString)
+            webgl.shaderSource(fsshader,fragmentString)
+            //将绑定后的着色器编译,直接传入容器即可
+            webgl.compileShader(vsshader);
+            webgl.compileShader(fsshader);
+            if (!webgl.getShaderParameter(vsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(vsshader);
+                alert(err);
+                return;
+            }
+            if (!webgl.getShaderParameter(fsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(fsshader);
+                alert(err);
+                return;
+            }
+            //创建webgl程序，并将并将这两个 shader 关联到这个 WebGL 程序上
+            let program = webgl.createProgram();
+            webgl.attachShader(program,vsshader);
+            webgl.attachShader(program,fsshader);
+            //WebGLProgram 对象的创建过程主要是添加 vertexShader 和 fragmentShader，然后将这个 WebGLProgram 对象链接到 WebGL 上下文对象上。
+            webgl.linkProgram(program);
+            //最后，通过useProgram选择启用这个WebGLProgram对象。这样，当我们绘制图形时，GPU就会执行我们通过WebGLProgram设定的两个shader程序了。
+            webgl.useProgram(program);
+
+            webgl.program = program;
+
+        }
+        //数据缓冲区初始化函数(定义数据，并将数据推到sharder上)
+        var points = [];
+        var colors = [];
+        function initBuffer(){
+            document.addEventListener("mousedown", (e)=>{
+                let x = e.clientX;
+                let y = e.clientY;
+                let rect = e.target.getBoundingClientRect();
+                let pointx = ((x - rect.left) - 512) / 512;
+                let pointy = (350 - (y - rect.top)) / 350;
+                points.push(pointx);
+                points.push(pointy);
+                let pointPosition = new Float32Array(points);
+                //将数据存到缓存区
+                const bufferId = webgl.createBuffer() //创建buffer缓存对象
+                webgl.bindBuffer(webgl.ARRAY_BUFFER,bufferId);
+                webgl.bufferData(webgl.ARRAY_BUFFER,pointPosition,webgl.DYNAMIC_DRAW);
+
+                //读取缓存区中的数据到attribute变量中
+                const vPosition = webgl.getAttribLocation(webgl.program,'a_position');
+                webgl.vertexAttribPointer(vPosition,2,webgl.FLOAT,false,0,0)
+                webgl.enableVertexAttribArray(vPosition);
+                webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+                webgl.drawArrays(webgl.POINTS, 0, points.length / 3);
+
+            })
+            
+            
+        }
+        //webgl的绘制函数
+        function draw(){
+            webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+
+        }
     </script>
 </head>
-<body>
-    
+<body onload="init()">
+    <canvas id='webglCanvas' width="1024" height='700'></canvas>
 </body>
 </html>
