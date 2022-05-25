@@ -73,6 +73,8 @@ gl.vertexAttribPointer(vPosition,2,gl.FLOAT,false,0,0);
 gl.enableVertexAttribArray(vPosition);
 
 gl.clear(gl.COLOR_BUFFER_BIT);
-gl.drawElements(gl.LINE_STRIP, cells.length, gl.UNSIGNED_SHORT, 0);
+// gl.drawElements(gl.LINE_STRIP, cells.length, gl.UNSIGNED_SHORT, 0);
+//使用三角剖分填充多边形
+gl.drawElements(gl.TRIANGLES, cells.length, gl.UNSIGNED_SHORT, 0);
 
 
