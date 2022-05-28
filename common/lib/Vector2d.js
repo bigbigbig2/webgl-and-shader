@@ -21,7 +21,7 @@
     get y() {
       return this[1];
     }
-    //获取向量的长度
+    //获取向量的长度（向量的膜）
     get len() {
       //Math.hypot() 函数返回它的所有参数的平方和的平方根(x*x + y*y+...)
       return Math.hypot(this.x, this.y);
@@ -35,13 +35,13 @@
     copy() {
       return new Vector2D(this.x, this.y);
     }
-  
+    //向量相加
     add(v) {
       this.x += v.x;
       this.y += v.y;
       return this;
     }
-  
+    //向量相减
     sub(v) {
       this.x -= v.x;
       this.y -= v.y;
@@ -53,11 +53,11 @@
       this.y *= a;
       return this;
     }
-  
+    //叉乘
     cross(v) {
       return this.x * v.y - v.x * this.y;
     }
-  
+    //点乘
     dot(v) {
       return this.x * v.x + v.y * this.y;
     }
