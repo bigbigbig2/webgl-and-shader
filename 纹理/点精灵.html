@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制点精灵</title>
+    <script src="./../common/lib/glMatrix-0.9.6.min.js"></script>
+    <script>
+        let vertexstring = `
+        attribute vec4 a_position;
+        uniform     mat4    proj;
+        void main(void){
+            gl_Position =proj *  a_position;
+            gl_PointSize=64.0;
+        }
+        `;
+        let fragmentstring = `
+        precision mediump float;
+        uniform sampler2D texture;
+        void main(void){
+          vec4 color =texture2D(texture,gl_PointCoord);
+          if(color.a < 0.1)
+                discard;
+          gl_FragColor = color;
+        }
+        `;
+        var projMat4 = mat4.create();
+        var webgl;
+        var uniformTexture = 0;
+        var textureHandle;
+        function init() {
+            initWebgl();
+            initShader();
+            initBuffer();
+
+        }
+        function initWebgl() {
+            let webglDiv = document.getElementById('canvas');
+            webgl = webglDiv.getContext("webgl");
+            webgl.viewport(0, 0, webglDiv.clientWidth, webglDiv.clientHeight);
+            mat4.ortho(0, webglDiv.clientWidth, webglDiv.clientHeight, 0, -1.0, 1.0, projMat4)
+        }
+        function initShader() {
+
+            let vsshader = webgl.createShader(webgl.VERTEX_SHADER);
+            let fsshader = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+            webgl.shaderSource(vsshader, vertexstring);
+            webgl.shaderSource(fsshader, fragmentstring);
+
+            webgl.compileShader(vsshader);
+            webgl.compileShader(fsshader);
+            if (!webgl.getShaderParameter(vsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(vsshader);
+                alert(err);
+                return;
+            }
+            if (!webgl.getShaderParameter(fsshader, webgl.COMPILE_STATUS)) {
+                var err = webgl.getShaderInfoLog(fsshader);
+                alert(err);
+                return;
+            }
+            let program = webgl.createProgram();
+            webgl.attachShader(program, vsshader);
+            webgl.attachShader(program, fsshader)
+
+            webgl.linkProgram(program);
+            webgl.useProgram(program);
+
+            webgl.program = program
+        }
+        function initBuffer() {
+            let pointPosition = new Float32Array([100.0, 100.0, 0.0, 1.0, 100.0, 200.0, 0.0, 1.0, 200.0, 200.0, 0.0, 1.0]);
+            let aPsotion = webgl.getAttribLocation(webgl.program, "a_position");
+            
+            let triangleBuffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, pointPosition, webgl.STATIC_DRAW);
+            webgl.enableVertexAttribArray(aPsotion);
+
+            webgl.vertexAttribPointer(aPsotion,4, webgl.FLOAT,false,16,0 );
+            let uniformProj = webgl.getUniformLocation(webgl.program, "proj");
+            webgl.uniformMatrix4fv(uniformProj, false, projMat4);
+
+            uniformTexture = webgl.getUniformLocation(webgl.program, "texture"); //获取存储纹理单元的变量
+
+
+            webgl.enable(webgl.BLEND);
+            webgl.blendFunc(webgl.SRC_ALPHA, webgl.ONE_MINUS_SRC_ALPHA);
+
+            initTexture("point64.png");
+
+
+        }
+        //为webgl配置纹理
+        function handleLoadedTexture(texture) {
+            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, texture.image);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
+            //因为异步原因所以要加在这里
+            webgl.uniform1i(uniformTexture, 0);
+            draw();
+            // webgl.bindTexture(webgl.TEXTURE_2D, null);
+        }
+        //配置和加载纹理
+        function initTexture(imageFile) {
+            textureHandle = webgl.createTexture(); //创建纹理对象
+            textureHandle.image = new Image();
+            textureHandle.image.src = imageFile;
+            textureHandle.image.onload = function () {
+                handleLoadedTexture(textureHandle)
+            }
+
+        }
+        function draw() {
+            webgl.clearColor(1.0, 0.0, 0.0, 1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+            webgl.enable(webgl.DEPTH_TEST);
+            webgl.drawArrays(webgl.POINTS, 0, 3);
+        }
+    </script>
+</head>
+<body onload="init()">
+    <canvas id='canvas' width="1024" height='768'></canvas>
+</body>
+</html>
