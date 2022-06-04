@@ -1,15 +1,14 @@
 const canvas = document.querySelector('canvas');
-const gl = canvas.getContext('webgl');
+var gl = canvas.getContext('webgl');
 
 const vertex = `
     attribute vec4 a_position;
-    uniform mat4 v_ViewMatrix;
-    uniform mat4 u_ModelMatrix;
+    uniform mat4 u_moduleViewMatrix;
     attribute vec4 a_Color;
     varying vec4 v_Color;
 
     void main(){
-        gl_Position = v_ViewMatrix * u_ModelMatrix * a_position;
+        gl_Position = u_moduleViewMatrix * a_position;
         gl_PointSize = 1.0;
         v_Color = a_Color;
         
@@ -61,24 +60,18 @@ gl.bufferData(gl.ARRAY_BUFFER,verticesColors,gl.STATIC_DRAW)
 
 
 //创建视图矩阵(视点、视线和上方向)
-const viewMatrix=new Matrix4();
-viewMatrix.setLookAt(0.20, 0.25, 0.25, 0, 0, 0, 0, 1, 0);
-console.log(viewMatrix);
-const v_ViewMatrix = gl.getUniformLocation(program, 'v_ViewMatrix');
-//将视图矩阵传给u_ViewMatrix
-gl.uniformMatrix4fv(v_ViewMatrix, false, viewMatrix.elements);
+var moduleViewMatrix=new Matrix4();
+moduleViewMatrix.setLookAt(0.20, 0.25, 0.25, 0, 0, 0, 0, 1, 0);
+var v_moduleViewMatrix = gl.getUniformLocation(program, 'u_moduleViewMatrix'); //获取视图模型矩阵的地址
+gl.uniformMatrix4fv(v_moduleViewMatrix, false, moduleViewMatrix.elements);
 
-//模型矩阵
-const u_ModelMatrix = gl.getUniformLocation(program, 'u_ModelMatrix');
-const modelMatrix = new Matrix4();
-modelMatrix.setRotate(-10, 0, 0, 1); //尧Z轴旋转l10度
-gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-
-var FSIZE = verticesColors.BYTES_PER_ELEMENT ; 
 //从缓冲区中取出顶点数据并传递给顶点着色器
+var FSIZE = verticesColors.BYTES_PER_ELEMENT ; 
+
 const vPosition = gl.getAttribLocation(program,'a_position');
 gl.vertexAttribPointer(vPosition,3,gl.FLOAT,false,FSIZE*6,0);
 gl.enableVertexAttribArray(vPosition);
+
 //从缓冲区中取出颜色数据并传递给顶点着色器
 const vColor = gl.getAttribLocation(program,'a_Color');
 gl.vertexAttribPointer(vColor,3,gl.FLOAT,false,FSIZE*6,FSIZE*3);
@@ -86,3 +79,35 @@ gl.enableVertexAttribArray(vColor);
 
 gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.TRIANGLES,0,9);
+
+var g_eyeX=0.20,g_eyeY=0.25,g_eyeZ=0.25;//默认视点
+
+function keydown(ev,gl,v_moduleViewMatrix,moduleViewMatrix){
+    if(ev.keyCode == 39){ //按下右建
+        g_eyeX +=0.01;
+    }else if(ev.keyCode == 37){
+        g_eyeX -=0.01; //按下左键
+    }else{ //按下的是其他建
+        return;
+    }
+    draw(gl,v_moduleViewMatrix,moduleViewMatrix);
+}
+
+function draw(gl,v_moduleViewMatrix,moduleViewMatrix){
+    //设置视点和视线
+    moduleViewMatrix.setLookAt(g_eyeX,g_eyeX,g_eyeZ,0,0,0,0,1,0);
+    //将视图矩阵传递给v_moduleViewMatrix变量
+    gl.uniformMatrix4fv(v_moduleViewMatrix, false, moduleViewMatrix.elements);
+
+    //清空颜色缓冲
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES,0,9);
+}
+
+//注册键盘事件响应函数
+document.onkeydown = function(ev){
+    keydown(ev,gl,v_moduleViewMatrix,moduleViewMatrix);
+}
+// draw(gl,v_moduleViewMatrix,moduleViewMatrix);
+
+
