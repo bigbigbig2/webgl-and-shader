@@ -115,7 +115,7 @@
             let uniformProj = webgl.getUniformLocation(webgl.program, "proj");
             webgl.uniformMatrix4fv(uniformProj, false, projMat4);
 
-            //将缓存区数据读取点的webgl坐标
+            //将缓存区数据读取纹理坐标
             attribOutUV = webgl.getAttribLocation(webgl.program, "outUV");
             webgl.vertexAttribPointer(attribOutUV, 2, webgl.FLOAT, false, 6 * 4, 4 * 4);//将缓冲区对象的值赋给存储attribute变量地址的js变量
             webgl.enableVertexAttribArray(attribOutUV);
@@ -164,7 +164,6 @@
             webgl.clearColor(0.0, 1.0, 0.0, 1.0);
             webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
             webgl.enable(webgl.DEPTH_TEST);
-
 
 
             //纹理变动
