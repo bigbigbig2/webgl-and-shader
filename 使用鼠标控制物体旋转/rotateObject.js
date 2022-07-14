@@ -1,29 +1,44 @@
-import { Matrix4 } from './../common/lib/cuon-matrix.js';
+import  Matrix4  from './../common/lib/cuon-matrix.js';
 
 const vertex = `
     attribute vec4 a_Position;
-    attribute vec4 a_TexCoord;
+    attribute vec2 a_TexCoord; //纹理坐标
     uniform mat4 u_MvpMatrix;
     varying vec2 v_TexCoord;
     void main(){
-        gl_Position = u_MvpMatrix *a_Position;
+        gl_Position = u_MvpMatrix * a_Position;
         v_TexCoord = a_TexCoord;
     }
 `
 
 const fragment = `
     precision mediump float;
-    uniform sampler2D u_Sampler;
-    varying vec2 v_TexCoord;
+    uniform sampler2D u_Sampler; //纹理单元变量
+    varying vec2 v_TexCoord; //顶点纹理坐标变量
     void main(){
-        gl_FragColor = texCoords(u_Sampler, v_TexCoord);
+        gl_FragColor = texture2D(u_Sampler, v_TexCoord);
     }
 `
 
+var canvas = document.querySelector('canvas');
+var gl = canvas.getContext('webgl'); 
+
+const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(vertexShader, vertex);
+gl.compileShader(vertexShader);
+
+const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragmentShader, fragment);
+gl.compileShader(fragmentShader);
+
+//创建webgl程序
+const program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
+gl.useProgram(program);
 
 function main(){
-    
-    initShaders();
     var n = initBuffer(gl);
     if( n < 0){
         console.log('Failed to set the vertex information');
@@ -67,32 +82,7 @@ function main(){
 
 }
 
-function initShaders(){
-    const canvas = document.querySelector('canvas');
-    const gl = canvas.getContext('webgl');
-    if (!gl) {
-        console.log('Failed to get the rendering context for WebGL');
-        return;
-    }
 
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-
-    gl.shaderSource(vertexShader,vertex);
-    gl.shaderSource(fragmentShader,fragment);
-
-    gl.compileShader(vertexShader);
-    gl.compileShader(fragmentShader);
-
-    const program = gl.createProgram();
-    gl.attachShader(program,vertexShader);
-    gl.attachShader(program,fragmentShader);
-
-    gl.linkProgram(program);
-    gl.useProgram(program);
-
-    return {canvas,gl,program};
-}
 function initBuffer(gl){
     //    v6----- v5
     //   /|      /|
@@ -130,6 +120,7 @@ function initBuffer(gl){
     ]);
 
     // 创建一个缓冲区对象（保持索引数据）
+    // console.log(gl);
     var indexBuffer = gl.createBuffer();
     if (!indexBuffer) {
         return -1;
@@ -182,35 +173,35 @@ function initEventHandlers(canvas, currentAngle) {
   }
 
 var g_MvpMatrix = new Matrix4(); // MVP矩阵
-function draw(){
+function draw(gl, n, viewProjMatrix, u_MvpMatrix, currentAngle){
     // 计算模型视图投影矩阵并传递给u_MvpMatrix
     g_MvpMatrix.set(viewProjMatrix);
-    g_MvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
-    g_MvpMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis
+    g_MvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // 绕 x 轴旋转
+    g_MvpMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // 绕 y 轴旋转
     gl.uniformMatrix4fv(u_MvpMatrix, false, g_MvpMatrix.elements);
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);     // Clear buffers
-    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);   // Draw the cube
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);     // 清除缓存去
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);   // 绘制立方体
 }
 
 function initArrayBuffer(gl, data, num, type, attribute) {
-    // Create a buffer object
+    //创建一缓冲区对象
     var buffer = gl.createBuffer();
     if (!buffer) {
       console.log('Failed to create the buffer object');
       return false;
     }
-    // Write date into the buffer object
+    //写入数据到缓冲区对象中
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-    // Assign the buffer object to the attribute variable
-    var a_attribute = gl.getAttribLocation(gl.program, attribute);
+    // 将缓冲区对象分配给属性变量
+    var a_attribute = gl.getAttribLocation(program, attribute);
     if (a_attribute < 0) {
       console.log('Failed to get the storage location of ' + attribute);
       return false;
     }
     gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
-    // Enable the assignment to a_attribute variable
+    // 启用对 a_attribute 变量的分配
     gl.enableVertexAttribArray(a_attribute);
   
     return true;
@@ -219,9 +210,48 @@ function initArrayBuffer(gl, data, num, type, attribute) {
 
 
 function initTextures(gl){
+    //创建一个纹理对象
+    var texture = gl.createTexture();
+    if (!texture) {
+        console.log('Failed to create the texture object');
+        return false;
+    }
 
+    // 获取u_Sampler变量的内存地址
+    var u_Sampler = gl.getUniformLocation(program, 'u_Sampler');
+    if (!u_Sampler) {
+        console.log('Failed to get the storage location of u_Sampler');
+        return false;
+    }
+
+    // 创建纹理图像对象
+    var image = new Image();
+    if (!image) {
+        console.log('Failed to create the image object');
+        return false;
+    }
+    // 注册图像加载完成时要调用的事件处理程序
+    image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
+    // 告诉浏览器加载图像
+    image.src = './sky.JPG';
+
+    return true;
 }
 
-function loadTexture(){
-
+function loadTexture(gl, texture, u_Sampler, image){
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);  // 对y轴进行旋转
+    // 激活0号纹理单元
+    gl.activeTexture(gl.TEXTURE0);
+    // 将纹理对象绑定到目标对象上
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+  
+    // 配置纹理参数
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    // 将纹理图像绑定到纹理对象上
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+  
+    // 传递纹理坐标着色器
+    gl.uniform1i(u_Sampler, 0);
 }
+
+main();
