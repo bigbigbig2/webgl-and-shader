@@ -43,9 +43,9 @@ const fragment = `
         1.0,  1.0,  1.0,     1.0,  1.0,  1.0,
         -1.0,  1.0,  1.0,     1.0,  0.0,  1.0,
         -1.0, -1.0,  1.0,     1.0,  0.0,  0.0,
-         1.0, -1.0,  1.0,     1.0,  1.0,  0.0,
-         1.0, -1.0, -1.0,     0.0,  1.0,  0.0,
-         1.0,  1.0, -1.0,     0.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,     1.0,  1.0,  0.0,
+        1.0, -1.0, -1.0,     0.0,  1.0,  0.0,
+        1.0,  1.0, -1.0,     0.0,  1.0,  1.0,
         -1.0,  1.0, -1.0,     0.0,  0.0,  1.0,
         -1.0, -1.0, -1.0,     0.0,  0.0,  0.0,
     ]);
@@ -90,7 +90,7 @@ const fragment = `
     //设置视点和可视空间
     const u_ModelMatrix = gl.getUniformLocation(program, "u_ModelMatrix");//获取模型矩阵的地址
     const mvpMatrix = new Matrix4();
-    mvpMatrix.setPerspective(30,1,1,100);//设置正射投影矩阵
+    mvpMatrix.setPerspective(30,1,1,100);//定义矩阵投影矩阵
     mvpMatrix.lookAt(3, 3, 7, 0, 0, 0, 0, 1, 0); //设置观察者
     gl.uniformMatrix4fv(u_ModelMatrix,false,mvpMatrix.elements); //将模型视图矩阵传递给u_MoeelMatrix
 
