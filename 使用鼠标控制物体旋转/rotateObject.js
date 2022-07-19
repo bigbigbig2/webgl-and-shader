@@ -20,23 +20,35 @@ const fragment = `
     }
 `
 
-var canvas = document.querySelector('canvas');
-var gl = canvas.getContext('webgl'); 
+const canvas = document.querySelector('canvas');
+const gl = canvas.getContext('webgl'); 
 
-const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-gl.shaderSource(vertexShader, vertex);
-gl.compileShader(vertexShader);
+function initShaders(gl, type, source){
+    const shader = gl.createShader(type)
+    
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
 
-const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-gl.shaderSource(fragmentShader, fragment);
-gl.compileShader(fragmentShader);
+    return shader
+}
 
-//创建webgl程序
-const program = gl.createProgram();
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-gl.useProgram(program);
+  //生成webgl程序
+function generateProgram(gl, vertex, fragment) {
+    const vertexShader = initShaders(gl, gl.VERTEX_SHADER, vertex)
+    const fragmentShader = initShaders(gl, gl.FRAGMENT_SHADER, fragment)
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    gl.linkProgram(program);
+    gl.useProgram(program)
+
+    return program
+}
+
+const program = generateProgram(gl, vertex, fragment)
+
 
 function main(){
     var n = initBuffer(gl);
@@ -59,7 +71,7 @@ function main(){
     // 计算视图矩阵
     var viewProjMatrix = new Matrix4();
     viewProjMatrix.setPerspective(30.0, canvas.width / canvas.height, 1.0, 100.0); //透视投影
-    viewProjMatrix.lookAt(3.0, 3.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);//观察者
+    viewProjMatrix.lookAt(3.0, 3.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);//观察者(创建视点、观察点、上方向创建视图矩阵)
 
     //注册事件响应函数，鼠标移动事件响应函数：实现了使用鼠标旋转三维物体的逻辑
     var currentAngle = [0.0, 0.0]; // 当前旋转角度([x-axis, y-axis] degrees)
@@ -119,8 +131,7 @@ function initBuffer(gl){
         20,21,22,  20,22,23     // back
     ]);
 
-    // 创建一个缓冲区对象（保持索引数据）
-    // console.log(gl);
+    // 创建一个缓冲区对象（保存索引数据）
     var indexBuffer = gl.createBuffer();
     if (!indexBuffer) {
         return -1;
