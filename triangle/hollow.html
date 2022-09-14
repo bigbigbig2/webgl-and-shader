@@ -56,7 +56,7 @@
     ]);
     //这个过程简单总结为三步，分别是创建一个缓存对象，将它绑定为当前操作对象，再把当前的数据写入缓存对象。这三个步骤主要是利用 createBuffer、bindBuffer、bufferData 方法来实现
     const bufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);//将缓冲区对象绑定到target中gl.ARRAY_BUFFER这个“目标”表示缓冲区对象的用途
     gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
 
     //将 buffer 的数据绑定给顶点着色器的 position 变量。

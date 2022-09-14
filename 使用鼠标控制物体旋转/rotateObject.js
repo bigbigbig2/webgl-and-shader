@@ -51,7 +51,7 @@ const program = generateProgram(gl, vertex, fragment)
 
 
 function main(){
-    var n = initBuffer(gl);
+    let n = initBuffer(gl);
     if( n < 0){
         console.log('Failed to set the vertex information');
         return;
@@ -62,19 +62,19 @@ function main(){
     gl.enable(gl.DEPTH_TEST);
 
     //获取u_MvpMatrix变量的存储地
-    var u_MvpMatrix = gl.getUniformLocation(program,'u_MvpMatrix');
+    const u_MvpMatrix = gl.getUniformLocation(program,'u_MvpMatrix');
     if (!u_MvpMatrix) { 
         console.log('Failed to get the storage location of uniform variable');
         return;
     }
 
     // 计算视图矩阵
-    var viewProjMatrix = new Matrix4();
+    const viewProjMatrix = new Matrix4();
     viewProjMatrix.setPerspective(30.0, canvas.width / canvas.height, 1.0, 100.0); //透视投影
     viewProjMatrix.lookAt(3.0, 3.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);//观察者(创建视点、观察点、上方向创建视图矩阵)
 
     //注册事件响应函数，鼠标移动事件响应函数：实现了使用鼠标旋转三维物体的逻辑
-    var currentAngle = [0.0, 0.0]; // 当前旋转角度([x-axis, y-axis] degrees)
+    let currentAngle = [0.0, 0.0]; // 当前旋转角度([x-axis, y-axis] degrees)
     initEventHandlers(canvas, currentAngle);
 
     // 配置纹理图片
@@ -84,7 +84,7 @@ function main(){
     }
 
     //绘制过程函数
-    var tick = function() {  
+    const tick = function() {  
         draw(gl, n, viewProjMatrix, u_MvpMatrix, currentAngle);
         requestAnimationFrame(tick, canvas);
     };
@@ -138,7 +138,7 @@ function initBuffer(gl){
     }
     
 
-    // 将顶点信息写入缓冲区对象
+    // 将顶点信息写入缓冲区对象（顶点坐标和纹理坐标可以写入同一缓冲区对象中，而索引坐标不行）
     if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position')) return -1; // 顶点坐标
     if (!initArrayBuffer(gl, texCoords, 2, gl.FLOAT, 'a_TexCoord')) return -1;// 纹理坐标
 
@@ -152,10 +152,10 @@ function initBuffer(gl){
     return indices.length;
 
 }
-
+//鼠标拖拽事件
 function initEventHandlers(canvas, currentAngle) {
-    var dragging = false;         // 是否拖动鼠标
-    var lastX = -1, lastY = -1;   // 鼠标最后的位置
+    let dragging = false;         // 是否拖动鼠标
+    let lastX = -1, lastY = -1;   // 鼠标最后的位置
   
     canvas.onmousedown = function(ev) {   // 鼠标被按下
       var x = ev.clientX, y = ev.clientY; //按下鼠标时的屏幕坐标
@@ -183,7 +183,7 @@ function initEventHandlers(canvas, currentAngle) {
     };
   }
 
-var g_MvpMatrix = new Matrix4(); // MVP矩阵
+const g_MvpMatrix = new Matrix4(); // MVP矩阵
 function draw(gl, n, viewProjMatrix, u_MvpMatrix, currentAngle){
     // 计算模型视图投影矩阵并传递给u_MvpMatrix
     g_MvpMatrix.set(viewProjMatrix);
@@ -194,10 +194,10 @@ function draw(gl, n, viewProjMatrix, u_MvpMatrix, currentAngle){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);     // 清除缓存去
     gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);   // 绘制立方体
 }
-
+//将顶点数据存到缓冲区，然后取出传递到着色器重
 function initArrayBuffer(gl, data, num, type, attribute) {
     //创建一缓冲区对象
-    var buffer = gl.createBuffer();
+    const buffer = gl.createBuffer();
     if (!buffer) {
       console.log('Failed to create the buffer object');
       return false;
@@ -206,7 +206,7 @@ function initArrayBuffer(gl, data, num, type, attribute) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     // 将缓冲区对象分配给属性变量
-    var a_attribute = gl.getAttribLocation(program, attribute);
+    const a_attribute = gl.getAttribLocation(program, attribute);
     if (a_attribute < 0) {
       console.log('Failed to get the storage location of ' + attribute);
       return false;
@@ -216,13 +216,13 @@ function initArrayBuffer(gl, data, num, type, attribute) {
     gl.enableVertexAttribArray(a_attribute);
   
     return true;
-  }
+}
     
 
 
 function initTextures(gl){
     //创建一个纹理对象
-    var texture = gl.createTexture();
+    const texture = gl.createTexture();
     if (!texture) {
         console.log('Failed to create the texture object');
         return false;
