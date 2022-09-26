@@ -1,3 +1,5 @@
+import { Matrix4 } from "../common/lib/cuon-matrix.js";
+
 const vertex = `
     attribute vec4 a_position;
     uniform mat4 u_projMatrix;
@@ -112,7 +114,7 @@ function draw(gl,u_projMatrix,projMatrix){
 }
 
 
+main();
 
-
-gl.clear(gl.COLOR_BUFFER_BIT);
+// gl.clear(gl.COLOR_BUFFER_BIT);
 gl.drawArrays(gl.TRIANGLES,0,9);

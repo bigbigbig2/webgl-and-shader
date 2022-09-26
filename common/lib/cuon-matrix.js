@@ -12,7 +12,7 @@
  * Otherwise, new matrix is initialized by identity matrix.
  * @param opt_src source matrix(option)
  */
-export var Matrix4 = function(opt_src) {
+var Matrix4 = function(opt_src) {
   var i, s, d;
   if (opt_src && typeof opt_src === 'object' && opt_src.hasOwnProperty('elements')) {
     s = opt_src.elements;
@@ -700,7 +700,7 @@ Matrix4.prototype.dropShadowDirectionally = function(normX, normY, normZ, planeX
  * If opt_src is specified, new vector is initialized by opt_src.
  * @param opt_src source vector(option)
  */
- export var Vector3 = function(opt_src) {
+var Vector3 = function(opt_src) {
   var v = new Float32Array(3);
   if (opt_src && typeof opt_src === 'object') {
     v[0] = opt_src[0]; v[1] = opt_src[1]; v[2] = opt_src[2];
@@ -739,4 +739,5 @@ var Vector4 = function(opt_src) {
   } 
   this.elements = v;
 }
+export {Vector3,Matrix4}
 

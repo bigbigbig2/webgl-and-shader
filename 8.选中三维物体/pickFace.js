@@ -1,4 +1,4 @@
-import  Matrix4  from './../common/lib/cuon-matrix.js';
+import  {Matrix4}  from './../common/lib/cuon-matrix.js';
 
 const vertex = `
     attribute vec4 a_Position;
