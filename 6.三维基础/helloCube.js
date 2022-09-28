@@ -99,7 +99,7 @@ const fragment = `
     //清空颜色缓冲区和深度缓冲区
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER);
     //绘制
-    gl.drawElements(gl.TRIANGLES,indices.length, gl.UNSIGNED_BYTE, 0);
+    gl.drawElements(gl.LINE_LOOP,indices.length, gl.UNSIGNED_BYTE, 0);
 
 
     
