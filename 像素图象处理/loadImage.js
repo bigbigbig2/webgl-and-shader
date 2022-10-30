@@ -1,4 +1,3 @@
-
 function main() {
   const image = new Image();
   image.src = "./test.png" 
@@ -8,124 +7,105 @@ function main() {
 }
 
 function render(image) {
-  // Get A WebGL context
-  /** @type {HTMLCanvasElement} */
-  var canvas = document.querySelector("#canvas");
-  var gl = canvas.getContext("webgl");
-  if (!gl) {
-    return;
-  }
+// Get A WebGL context
+/** @type {HTMLCanvasElement} */
+const canvas = document.querySelector("#canvas");
+const gl = canvas.getContext("webgl");
+if (!gl) {
+  return;
+}
 
-  // setup GLSL program
-  var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
+//将创建顶点着色容器、webgl程序等一步封装完成至linkProgram
+const program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
 
-  // look up where the vertex data needs to go.
-  var positionLocation = gl.getAttribLocation(program, "a_position");
-  var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+const positionLocation = gl.getAttribLocation(program, "a_position");
+const texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+const samplerImage = gl.getUniformLocation(program, "u_image");
 
-  // Create a buffer to put three 2d clip space points in
-  var positionBuffer = gl.createBuffer();
+//创建一个顶点缓冲区对象，用来存储三个二维的裁剪空间点
+const positionBuffer = gl.createBuffer();
+//将该缓冲区对象绑定到WebGL 系统中已经存在的“目标 ”(target）上（指定该对象将用来存储什么数据）
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+//设置一个和图片长宽高的矩形，并将其存到顶点缓冲区中
+// console.log(image.width, image.height)
+setRectangle(gl, 0, 0, image.width, image.height);
 
-  // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  // Set a rectangle the same size as the image.
-  setRectangle(gl, 0, 0, image.width, image.height);
+//给矩形提供纹理坐标,并将其存储到另一个顶点缓冲区中
+const texcoordBuffer = gl.createBuffer(); //在创建一个顶点缓冲区
+gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+//传递纹理坐标给顶点着色器：一个矩形，两个三角形，6个点
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    0.0,  0.0,
+    1.0,  0.0,
+    0.0,  1.0,
+    0.0,  1.0,
+    1.0,  0.0,
+    1.0,  1.0,
+]), gl.STATIC_DRAW);
 
-  // 给矩形提供纹理坐标
-  var texcoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-  //传递纹理坐标给顶点着色器：一个矩形，两个三角形，6个点
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      0.0,  0.0,
-      1.0,  0.0,
-      0.0,  1.0,
-      0.0,  1.0,
-      1.0,  0.0,
-      1.0,  1.0,
-  ]), gl.STATIC_DRAW);
 
-  // Create a texture.
-  var texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+const texture = gl.createTexture();// 创建纹理对象
+gl.bindTexture(gl.TEXTURE_2D, texture);//绑定纹理对象，选纹理类型
 
-  // Set the parameters so we can render any size image.
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+// 配置参数
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);//配置水平填充
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-  // Upload the image into the texture.
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+//将图像分配给纹理对象
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+// gl.activeTexture(gl.TEXTURE0); //激活0号纹理单元
+// gl.uniform1i(samplerImage,0);
 
-  // lookup uniforms
-  var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+// lookup uniforms
+var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
 
-  //只要样式宽高和元素宽高不同就将样式的宽高赋值给元素的宽高，也就意味着设置元素宽高无效，得通过样式宽高来设置
-  webglUtils.resizeCanvasToDisplaySize(gl.canvas); 
 
-  // Tell WebGL how to convert from clip space to pixels
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+gl.clearColor(0, 0, 0, 0);
+gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // Clear the canvas
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // Tell it to use our program (pair of shaders)
-  gl.useProgram(program);
+gl.useProgram(program);
 
-  // Turn on the position attribute
-  gl.enableVertexAttribArray(positionLocation);
+gl.enableVertexAttribArray(positionLocation);
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+//将缓冲区中的数据取出传递给顶点着色器中的a_position
+gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-  // Bind the position buffer.
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-  var size = 2;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
-  var normalize = false; // don't normalize the data
-  var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-  var offset = 0;        // start at the beginning of the buffer
-  gl.vertexAttribPointer(
-      positionLocation, size, type, normalize, stride, offset);
 
-  // Turn on the texcoord attribute
-  gl.enableVertexAttribArray(texcoordLocation);
+gl.enableVertexAttribArray(texcoordLocation);
 
-  // bind the texcoord buffer.
-  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
 
-  // Tell the texcoord attribute how to get data out of texcoordBuffer (ARRAY_BUFFER)
-  var size = 2;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
-  var normalize = false; // don't normalize the data
-  var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-  var offset = 0;        // start at the beginning of the buffer
-  gl.vertexAttribPointer(
-      texcoordLocation, size, type, normalize, stride, offset);
+gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+//将缓冲区中的数据取出传递给顶点着色器中的a_texCoord
+gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
 
-  // set the resolution
-  gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+//向unifor变量赋值
+gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
-  // Draw the rectangle.
-  var primitiveType = gl.TRIANGLES;
-  var offset = 0;
-  var count = 6;
-  gl.drawArrays(primitiveType, offset, count);
+// 以三角形为图元绘图
+var primitiveType = gl.TRIANGLES;
+var offset = 0;
+var count = 6;
+gl.drawArrays(primitiveType, offset, count);
 }
 
 function setRectangle(gl, x, y, width, height) {
-  var x1 = x;
-  var x2 = x + width;
-  var y1 = y;
-  var y2 = y + height;
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
-  ]), gl.STATIC_DRAW);
+var x1 = x;
+var x2 = x + width;
+var y1 = y;
+var y2 = y + height;
+//将矩形纹理坐标存到缓冲区对象中（两个三角形)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    x1, y1,
+    x2, y1,
+    x1, y2,
+    x1, y2,
+    x2, y1,
+    x2, y2,
+]), gl.STATIC_DRAW);
 }
 
 main();
@@ -137,7 +117,7 @@ main();
 // do NOT give permission.
 // See: https://webglfundamentals.org/webgl/lessons/webgl-cors-permission.html
 function requestCORSIfNotSameOrigin(img, url) {
-  if ((new URL(url, window.location.href)).origin !== window.location.origin) {
-    img.crossOrigin = "";
-  }
+if ((new URL(url, window.location.href)).origin !== window.location.origin) {
+  img.crossOrigin = "";
+}
 }

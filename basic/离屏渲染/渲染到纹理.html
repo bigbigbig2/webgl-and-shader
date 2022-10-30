@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>渲染到纹理</title>
+  <style>
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="700" height="700"></canvas>
+    <!-- vertex shader -->
+    <script  id="vertex-shader-3d" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        attribute vec2 a_texcoord;
+        uniform mat4 u_matrix; //模型变换矩阵
+        varying vec2 v_texcoord;
+
+        void main() {
+        gl_Position = u_matrix * a_position;
+
+        v_texcoord = a_texcoord;
+        }
+    </script>
+    <!-- fragment shader -->
+    <script  id="fragment-shader-3d" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 v_texcoord;
+        uniform sampler2D u_texture;
+
+        void main() {
+        gl_FragColor = texture2D(u_texture, v_texcoord);
+        }
+  </script>
+  <script src="./../../common/lib/webgl-utils.js"></script>
+  <script src="./../../common/m4.js"></script>=
+  <script src="./渲染到纹理.js" type="text/javascript"></script>
+</body>
+</html>

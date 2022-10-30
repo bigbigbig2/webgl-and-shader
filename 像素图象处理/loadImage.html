@@ -5,21 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>图象处理基础</title>
   <style>
-    /* 移除边界 */
-    body {
-      border: 0;
-      background-color: white;
-    }
-    /* 设置欢度大小为视域大小 */
-    canvas {
-      width: 500px;
-      height: 500px;
-      display: block;
-    }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" width="700" height="700"></canvas>
   <!-- vertex shader -->
   <script  id="vertex-shader-2d" type="x-shader/x-vertex">
     attribute vec2 a_position;
@@ -29,11 +18,14 @@
     
     void main() {
         // 将画布从像素坐标转换为 0.0 到 1.0(归一化)
-        vec2 zeroToOne = a_position / u_resolution; // 图像高宽/画布高宽 
+        vec2 zeroToOne = a_position / u_resolution; // 图片宽高/画布宽高
         // 从 0->1 转换为 0->2
         vec2 zeroToTwo = zeroToOne * 2.0;
         // 从 0->2 转换为 -1->+1(剪辑空间)
         vec2 clipSpace = zeroToTwo - 1.0;
+        //将图像坐标反转陈和纹理坐标一样(y轴反转),反转后图像矩形坐标就就和webgl裁剪空间一样了
+        //这样就那了图像的高宽绘制了一个矩形
+        //对于纹理贴图,要么转换uv坐标,要么转换贴图图形坐标,以使它们能够贴合
         gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
         // 将 texCoord 传递给片段着色器
         // GPU 将在点之间插入这个值。
@@ -43,13 +35,12 @@
     <!-- fragment shader -->
     <script  id="fragment-shader-2d" type="x-shader/x-fragment">
     precision mediump float; 
+    //默认使用0号纹理单元,如只有一个纹理可以不传递,调用 bindTexture 会将纹理绑定到单元0
     uniform sampler2D u_image;
     varying vec2 v_texCoord;  
     void main() {
-        vec4 color = texture2D(u_image, v_texCoord); //原色
-        float v = (color.r + color.g + color.b) / 3.0; 
-        float p = 2.0;
-        gl_FragColor = vec4(color.r * p,color.g * p, color.b * p, color.a);
+        vec4 color = texture2D(u_image, v_texCoord); //输入纹理坐标返回
+        gl_FragColor = color;
     }
   </script>
   <script src="../common/lib/webgl-utils.js"></script>

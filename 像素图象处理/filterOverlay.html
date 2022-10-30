@@ -3,17 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>高斯模糊——3x3卷积内核</title>
+  <title>多种滤镜叠加效果</title>
   <style>
+    @import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+    body {
+        margin: 0;
+    }
+    canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+    #ui {
+        font-size: x-small;
+    }
+    table {
+        border-collapse: collapse;
+        pointer-events: auto;
+    }
+    .tDnD_whileDrag {
+        background-color: #daf !important;
+    }
+    tr:nth-child(odd) {
+        background-color: #eee;
+    }
+    tr:nth-child(even) {
+        background-color: #def;
+    }
+    td {
+        border-width: 0px;
+        padding: 0px;
+        margin: 0px;
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas" width="700" height="700"></canvas>
+  <div id="uiContainer">
+    <div id="ui"></div>
+  </div>
   <!-- vertex shader -->
   <script  id="vertex-shader-2d" type="x-shader/x-vertex">
     attribute vec2 a_position;
     attribute vec2 a_texCoord;
     uniform vec2 u_resolution;
+    uniform float u_flipY;
     varying vec2 v_texCoord; //接收纹理坐标然后传递给片元着色其
     
     void main() {
@@ -26,7 +60,7 @@
         //将图像坐标反转陈和纹理坐标一样(y轴反转),反转后图像矩形坐标就就和webgl裁剪空间一样了
         //这样就那了图像的高宽绘制了一个矩形
         //对于纹理贴图,要么转换uv坐标,要么转换贴图图形坐标,以使它们能够贴合
-        gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        gl_Position = vec4(clipSpace * vec2(1, u_flipY), 0, 1);
         // 将 texCoord 传递给片段着色器
         // GPU 将在点之间插入这个值。
         v_texCoord = a_texCoord;
@@ -64,6 +98,8 @@
       }
     </script>
   <script src="../common/lib/webgl-utils.js"></script>
-  <script src="./GaussianBlur.js" type="text/javascript"></script>
+  <script src="./filterOverlay.js" type="text/javascript"></script>
+  </script><script src="https://webglfundamentals.org/webgl/resources/jquery-1.7.1.min.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/jquery.tablednd_0_5.js"></script>
 </body>
 </html>

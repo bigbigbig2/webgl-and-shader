@@ -20,6 +20,11 @@ function render(image) {
 
   const positionLocation = gl.getAttribLocation(program, "a_position");
   const texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+  const samplerImage = gl.getUniformLocation(program, "u_image");
+  const textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
+  const kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
+  const kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
+  
 
   //创建一个顶点缓冲区对象，用来存储三个二维的裁剪空间点
   const positionBuffer = gl.createBuffer();
@@ -42,9 +47,16 @@ function render(image) {
       1.0,  1.0,
   ]), gl.STATIC_DRAW);
 
+  const gaussianBlur3 = [
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1
+  ];
+
   
+
   const texture = gl.createTexture();// 创建纹理对象
-  gl.bindTexture(gl.TEXTURE_2D, texture);//开启纹理对象以及将纹理对象象绑定到纹理单元上
+  gl.bindTexture(gl.TEXTURE_2D, texture);//绑定纹理对象，选纹理类型
 
   // 配置参数
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);//配置水平填充
@@ -54,13 +66,12 @@ function render(image) {
 
   //将图像分配给纹理对象
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  // gl.activeTexture(gl.TEXTURE0); //激活0号纹理单元
+  // gl.uniform1i(samplerImage,0);
 
   // lookup uniforms
   var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
   
-  // 将webgl裁剪空间转化为像素空间（css样式大小）
-  gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
-
 
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -83,13 +94,23 @@ function render(image) {
   gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
 
   //向unifor变量赋值
-  gl.uniform2f(resolutionLocation, canvas.clientWidth, canvas.clientHeight);
+  gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+  gl.uniform2f(textureSizeLocation, image.width, image.height);
+  gl.uniform1fv(kernelLocation, gaussianBlur3);
+  gl.uniform1f(kernelWeightLocation, computeKernelWeight(gaussianBlur3));
 
   // 以三角形为图元绘图
   var primitiveType = gl.TRIANGLES;
   var offset = 0;
   var count = 6;
   gl.drawArrays(primitiveType, offset, count);
+}
+
+function computeKernelWeight(kernel) {
+  var weight = kernel.reduce(function(prev, curr) {
+      return prev + curr;
+  });
+  return weight <= 0 ? 1 : weight;
 }
 
 function setRectangle(gl, x, y, width, height) {
